@@ -216,29 +216,59 @@ def predict_phishing(url, model, scaler):
 
 # Interface utilisateur
 url_input = st.text_input("Entrez l'URL à tester :", placeholder="https://www.example.com")
+
+def normalize_url(url):
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    # Vérifie si l'URL est valide (au moins un hostname)
+    parsed = urlparse(url)
+    if not parsed.hostname:
+        return None
+    return url
+
+def check_url_existence(url):
+    try:
+        # Envoie une requête HEAD avec un User-Agent pour éviter les blocages
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.head(url, timeout=5, headers=headers)
+        if response.status_code == 404:
+            return False, "URL introuvable (statut 404)."
+        elif response.status_code >= 400:
+            return False, f"Erreur HTTP : {response.status_code}"
+        return True, "URL accessible."
+    except requests.RequestException:
+        return False, "Impossible de vérifier l'URL (connexion échouée ou domaine inexistant)."
+
 if st.button("Vérifier l'URL"):
     if url_input:
         with st.spinner("Analyse de l'URL en cours..."):
             try:
-                if not url_input.startswith(('http://', 'https://')):
-                    url_input = 'https://' + url_input
-                result = predict_phishing(url_input, model, scaler)
-                url, label = result
-                if label == 'Phishing':
-                    st.error(f"⚠️ Attention : L'URL '{url}' semble être une URL de phishing !")
+                normalized_url = normalize_url(url_input)
+                if normalized_url:
+                    exists, message = check_url_existence(normalized_url)
+                    if not exists:
+                        st.error(f"Attention : {message} L'URL semble invalide ou inexistante.")
+                    else:
+                        result = predict_phishing(normalized_url, model, scaler)
+                        url, label = result
+                        if label == 'Phishing':
+                            st.error(f"⚠️ Attention : L'URL '{url}' semble être une URL de phishing !")
+                        else:
+                            st.success(f"✅ L'URL {url} semble légitime.")
+                        results = pd.DataFrame([result], columns=['URL', 'Prédiction'])
+                        results_path = 'C:\\Users\\Thibaut\\Documents\\MLProject\\url_pishing_classification\\predictions.csv'
+                        if not os.path.exists(results_path):
+                            results_path = 'predictions.csv'
+                        try:
+                            existing_results = pd.read_csv(results_path)
+                            results = pd.concat([existing_results, results], ignore_index=True)
+                        except FileNotFoundError:
+                            st.error(f"⚠️ Erreur de sauveagrde : L'URL '{url}")
+                            pass
+                        results.to_csv(results_path, index=False)
+                        st.write("Résultat sauvegardé✅")
                 else:
-                    st.success(f"✅ L'URL {url} semble légitime.")
-                results = pd.DataFrame([result], columns=['URL', 'Prédiction'])
-                results_path = 'C:\\Users\\Thibaut\\Documents\\MLProject\\url_pishing_classification\\predictions.csv'
-                if not os.path.exists(results_path):
-                    results_path = 'predictions.csv'
-                try:
-                    existing_results = pd.read_csv(results_path)
-                    results = pd.concat([existing_results, results], ignore_index=True)
-                except FileNotFoundError:
-                    pass
-                results.to_csv(results_path, index=False)
-                st.write("Résultat sauvegardé✅")
+                    st.error("URL invalide. Veuillez entrer une URL correcte.")
             except Exception as e:
                 st.error(f"Erreur lors de l'analyse : {str(e)}")
                 st.error(traceback.format_exc())
