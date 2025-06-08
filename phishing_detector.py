@@ -25,6 +25,12 @@ model_path = 'C:\\Users\\Thibaut\\Documents\\MLProject\\url_pishing_classificati
 scaler_path = 'C:\\Users\\Thibaut\\Documents\\MLProject\\url_pishing_classification\\minmax_scaler.pkl'
 
 try:
+    if not os.path.exists(model_path) or not os.path.exists(scaler_path):
+        # st.error("Erreur : Fichiers modèle ou scaler non trouvés.")
+        model_path = 'xgboost_model.pkl'
+        scaler_path = 'minmax_scaler.pkl'
+        st.stop()   
+        
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
     st.success("Modèle et scaler chargés avec succès !")
