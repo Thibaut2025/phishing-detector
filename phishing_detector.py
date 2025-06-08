@@ -238,7 +238,7 @@ if st.button("Vérifier l'URL"):
                 except FileNotFoundError:
                     pass
                 results.to_csv(results_path, index=False)
-                st.write("Résultat sauvegardé sur Google Drive.")
+                st.write("Résultat sauvegardé✅")
             except Exception as e:
                 st.error(f"Erreur lors de l'analyse : {str(e)}")
                 st.error(traceback.format_exc())
