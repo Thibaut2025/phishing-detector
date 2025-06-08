@@ -231,6 +231,8 @@ if st.button("Vérifier l'URL"):
                     st.success(f"✅ L'URL {url} semble légitime.")
                 results = pd.DataFrame([result], columns=['URL', 'Prédiction'])
                 results_path = 'C:\\Users\\Thibaut\\Documents\\MLProject\\url_pishing_classification\\predictions.csv'
+                if not os.path.exists(results_path):
+                    results_path = 'predictions.csv'
                 try:
                     existing_results = pd.read_csv(results_path)
                     results = pd.concat([existing_results, results], ignore_index=True)
