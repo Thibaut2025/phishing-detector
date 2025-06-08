@@ -29,7 +29,6 @@ try:
         # st.error("Erreur : Fichiers modèle ou scaler non trouvés.")
         model_path = 'xgboost_model.pkl'
         scaler_path = 'minmax_scaler.pkl'
-        st.stop()   
         
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
